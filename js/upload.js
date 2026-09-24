@@ -60,7 +60,7 @@
 
   function handleFile(file) {
     landingError.hidden = false;
-    landingError.textContent = "กำลังอ่านไฟล์...";
+    landingError.textContent = "Reading file...";
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
@@ -78,7 +78,7 @@
         const projects = parseRows(rows);
 
         if (projects.length === 0) {
-          showError("ไม่พบข้อมูลโครงการในไฟล์");
+          showError("No project data found in file");
           return;
         }
 
@@ -86,7 +86,7 @@
         showApp();
       } catch (err) {
         console.error(err);
-        showError("อ่านไฟล์ไม่สำเร็จ: " + err.message);
+        showError("Failed to read file: " + err.message);
       }
     };
     reader.readAsArrayBuffer(file);
@@ -101,7 +101,6 @@
         }
       }
     }
-    // Fallback: includes match
     for (const h of headers) {
       const lower = h.toLowerCase().trim();
       for (const p of patterns) {
@@ -114,7 +113,6 @@
   }
 
   function parseRows(rows) {
-    // Find header row (contains "Customer" and "Project NO")
     let headerRow = -1;
     for (let i = 0; i < Math.min(5, rows.length); i++) {
       const row = rows[i].map(c => String(c).toLowerCase());
@@ -127,19 +125,16 @@
 
     const headers = rows[headerRow].map(c => String(c).trim());
 
-    // Precise column matching — check exact/starts-with first
     const col = {};
     col.customer = findColumn(headers, ["customer"]);
     col.project_no = findColumn(headers, ["project no"]);
     col.project_name = findColumn(headers, ["project name"]);
-    // Exact match for start/end to avoid matching "Start-End MA with..."
-    col.start = findColumn(headers, ["start "]) >= 0 ? findColumn(headers, ["start "]) : (headers.findIndex(h => h.toLowerCase().trim() === "start"));
+    col.start = findColumn(headers, ["start "]) >= 0 ? findColumn(headers, ["start "]) : headers.findIndex(h => h.toLowerCase().trim() === "start");
     col.end = headers.findIndex(h => h.toLowerCase().trim() === "end");
     col.sale_pm = findColumn(headers, ["sale/pm"]);
     col.engineer = findColumn(headers, ["engineer"]);
     col.status_pct = findColumn(headers, ["status %"]);
 
-    // MA columns: contain "MA" and "customer"/"product"
     col.ma_customer = -1;
     col.ma_product = -1;
     headers.forEach((h, i) => {
@@ -151,7 +146,6 @@
       }
     });
 
-    // Action / Next Action / Note
     col.action = findColumn(headers, ["action"]);
     col.next_action = findColumn(headers, ["next action"]);
     col.note = findColumn(headers, ["note"]);
@@ -177,9 +171,7 @@
 
       projects.push({
         id: id++,
-        customer: customer,
-        project_no: pno,
-        project_name: pname,
+        customer, project_no: pno, project_name: pname,
         start: col.start >= 0 ? parseExcelDateValue(row[col.start]) : null,
         end: col.end >= 0 ? parseExcelDateValue(row[col.end]) : null,
         sale_pm: col.sale_pm >= 0 ? String(row[col.sale_pm] || "").trim() : "",
@@ -199,8 +191,7 @@
     if (!v && v !== 0) return null;
     if (typeof v === "number" && v > 40000 && v < 60000) {
       const base = new Date(1899, 11, 30);
-      const d = new Date(base.getTime() + v * 86400000);
-      return d.toISOString().slice(0, 10);
+      return new Date(base.getTime() + v * 86400000).toISOString().slice(0, 10);
     }
     if (typeof v === "string") {
       const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(v);
@@ -215,7 +206,7 @@
     landing.hidden = true;
     app.hidden = false;
     document.getElementById("dataMeta").textContent =
-      `${PT.state.source.fileName} · ${PT.state.projects.length} โครงการ`;
+      `${PT.state.source.fileName} · ${PT.state.projects.length} projects`;
     if (window.onDataReady) window.onDataReady();
   }
 
@@ -226,7 +217,7 @@
   };
 
   window.resetData = function() {
-    if (confirm("ล้างข้อมูลทั้งหมดและกลับไปหน้าอัปโหลด?")) {
+    if (confirm("Clear all data and return to upload page?")) {
       PT.reset();
       app.hidden = true;
       landing.hidden = false;

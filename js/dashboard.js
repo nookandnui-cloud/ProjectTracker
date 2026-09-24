@@ -7,7 +7,7 @@
     const projects = PT.projects();
 
     if (!projects.length) {
-      view.innerHTML = '<div class="empty">ไม่มีข้อมูล — อัปโหลดไฟล์ Excel ก่อน</div>';
+      view.innerHTML = '<div class="empty">No data — upload Excel file first</div>';
       return;
     }
 
@@ -18,8 +18,8 @@
 
     view.innerHTML = `
       <div class="view-head">
-        <h1>ภาพรวมโครงการ</h1>
-        <span class="sub">${projects.length} โครงการ · อัปเดต ${PT.state.source ? new Date(PT.state.source.ingestedAt).toLocaleDateString("th-TH") : "—"}</span>
+        <h1>Project Overview</h1>
+        <span class="sub">${projects.length} projects · Updated ${PT.state.source ? new Date(PT.state.source.ingestedAt).toLocaleDateString("en-US") : "—"}</span>
         <div class="spacer"></div>
       </div>
 
@@ -48,25 +48,25 @@
 
       <div class="grid cols-2">
         <div class="card">
-          <div class="card-head"><h2>สัดส่างสถานะโครงการ</h2></div>
+          <div class="card-head"><h2>Status Distribution</h2></div>
           <div class="card-body">
             ${renderStatusBars(statuses)}
           </div>
         </div>
         <div class="card">
-          <div class="card-head"><h2>ลูกค้า 5 อันดับ</h2></div>
+          <div class="card-head"><h2>Top 5 Customers</h2></div>
           <div class="card-body">
             ${renderCustomerBars(customers)}
           </div>
         </div>
         <div class="card">
-          <div class="card-head"><h2>วิศวกร 5 อันดับ</h2></div>
+          <div class="card-head"><h2>Top 5 Engineers</h2></div>
           <div class="card-body">
             ${renderEngineerBars(engineers)}
           </div>
         </div>
         <div class="card">
-          <div class="card-head"><h2>โครงการใหม่ล่าสุด</h2></div>
+          <div class="card-head"><h2>Latest Projects</h2></div>
           <div class="card-body tight">
             <div class="tbl-wrap">
               <table class="tbl">
@@ -92,14 +92,12 @@
   }
 
   function computeStats(projects) {
-    const now = new Date();
     let completed = 0, inProgress = 0, overdue = 0, inMA = 0;
     projects.forEach(p => {
       const status = PT.statusOf(p);
       if (status === "Completed") completed++;
       else if (status === "Overdue") overdue++;
       else if (status === "InProgress") inProgress++;
-      else {/* None */}
       if (p.ma_customer) inMA++;
     });
     return { total: projects.length, completed, inProgress, overdue, inMA };
@@ -125,10 +123,7 @@
 
   function countByStatus(projects) {
     const m = { Completed: 0, InProgress: 0, Overdue: 0, None: 0 };
-    projects.forEach(p => {
-      const s = PT.statusOf(p);
-      m[s] = (m[s] || 0) + 1;
-    });
+    projects.forEach(p => { m[PT.statusOf(p)] = (m[PT.statusOf(p)] || 0) + 1; });
     return Object.entries(m);
   }
 

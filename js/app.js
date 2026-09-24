@@ -19,12 +19,11 @@
 
     document.getElementById("drawerBackdrop").addEventListener("click", closeDrawer);
 
-    // If data already loaded, show app
     if (PT.state && PT.state.projects && PT.state.projects.length > 0) {
       document.getElementById("landing").hidden = true;
       document.getElementById("app").hidden = false;
       document.getElementById("dataMeta").textContent =
-        `${PT.state.source?.fileName || "—"} · ${PT.state.projects.length} โครงการ`;
+        `${PT.state.source?.fileName || "—"} · ${PT.state.projects.length} projects`;
       switchView("dashboard");
     }
   }
@@ -38,7 +37,6 @@
     else if (name === "report") window.renderReport();
   }
 
-  // ===== Add Project =====
   window.showAddProject = function() {
     const drawer = document.getElementById("drawer");
     const backdrop = document.getElementById("drawerBackdrop");
@@ -46,24 +44,24 @@
     drawer.innerHTML = `
       <div class="drawer-head">
         <div>
-          <h3>เพิ่มโครงการใหม่</h3>
-          <div class="sub">สร้างโครงการใหม่เข้าระบบ</div>
+          <h3>Add New Project</h3>
+          <div class="sub">Create a new project</div>
         </div>
-        <button class="close" onclick="closeDrawer()">✕</button>
+        <button class="close" onclick="closeDrawer()">&times;</button>
       </div>
       <div class="drawer-body">
         <form class="frm" id="addProjectForm" onsubmit="return false;">
           <div class="row">
-            <label>ชื่อลูกค้า</label>
-            <input type="text" name="customer" placeholder="เช่น GSB, KTC" required>
+            <label>Customer</label>
+            <input type="text" name="customer" placeholder="e.g. GSB, KTC" required>
           </div>
           <div class="row">
             <label>Project No</label>
-            <input type="text" name="project_no" placeholder="เช่น BFS220100">
+            <input type="text" name="project_no" placeholder="e.g. BFS220100">
           </div>
           <div class="row wide">
             <label>Project Name</label>
-            <textarea name="project_name" rows="2" placeholder="ชื่อโครงการ" required></textarea>
+            <textarea name="project_name" rows="2" placeholder="Project name" required></textarea>
           </div>
           <div class="row">
             <label>Start Date</label>
@@ -75,11 +73,11 @@
           </div>
           <div class="row">
             <label>Sale / PM</label>
-            <input type="text" name="sale_pm" placeholder="เช่น P'Aey/Gap">
+            <input type="text" name="sale_pm" placeholder="e.g. P'Aey/Gap">
           </div>
           <div class="row">
             <label>Engineer</label>
-            <input type="text" name="engineer" placeholder="เช่น Game/Hok">
+            <input type="text" name="engineer" placeholder="e.g. Game/Hok">
           </div>
           <div class="row">
             <label>Status %</label>
@@ -87,32 +85,29 @@
           </div>
           <div class="row wide">
             <label>MA (Customer)</label>
-            <textarea name="ma_customer" rows="2" placeholder="ข้อมูล MA ลูกค้า"></textarea>
+            <textarea name="ma_customer" rows="2" placeholder="MA customer details"></textarea>
           </div>
           <div class="row wide">
             <label>MA (Product)</label>
-            <textarea name="ma_product" rows="2" placeholder="ข้อมูล MA สินค้า"></textarea>
+            <textarea name="ma_product" rows="2" placeholder="MA product details"></textarea>
           </div>
           <div class="row wide">
-            <label>Action / ประวัติ</label>
-            <textarea name="action" rows="4" placeholder="บันทึกการดำเนินการ"></textarea>
+            <label>Action / History</label>
+            <textarea name="action" rows="4" placeholder="Action history"></textarea>
           </div>
           <div class="row wide">
             <label>Next Action</label>
-            <textarea name="next_action" rows="2" placeholder="แผนงานถัดไป"></textarea>
+            <textarea name="next_action" rows="2" placeholder="Next action plan"></textarea>
           </div>
           <div class="row wide">
-            <label>หมายเหตุ</label>
-            <textarea name="note" rows="2" placeholder="หมายเหตุเพิ่มเติม"></textarea>
+            <label>Note</label>
+            <textarea name="note" rows="2" placeholder="Additional notes"></textarea>
           </div>
         </form>
       </div>
       <div class="drawer-foot">
-        <button class="btn ghost" onclick="closeDrawer()">ยกเลิก</button>
-        <button class="btn primary" onclick="saveNewProject()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          บันทึก
-        </button>
+        <button class="btn ghost" onclick="closeDrawer()">Cancel</button>
+        <button class="btn primary" onclick="saveNewProject()">&#10003; Save</button>
       </div>
     `;
 
@@ -125,7 +120,7 @@
     const formData = new FormData(form);
 
     if (!formData.get("customer") || !formData.get("project_name")) {
-      PT.toast("กรุณากรอกชื่อลูกค้าและชื่อโครงการ");
+      PT.toast("Please enter customer and project name");
       return false;
     }
 
@@ -134,7 +129,7 @@
 
     const statusVal = formData.get("status_pct");
 
-    const newProject = {
+    PT.state.projects.push({
       id: maxId + 1,
       customer: formData.get("customer") || "",
       project_no: formData.get("project_no") || "",
@@ -149,17 +144,15 @@
       action: formData.get("action") || "",
       next_action: formData.get("next_action") || "",
       note: formData.get("note") || ""
-    };
+    });
 
-    PT.state.projects.push(newProject);
     PT.save();
-    PT.toast("เพิ่มโครงการใหม่เรียบร้อยแล้ว");
+    PT.toast("Project added successfully");
     closeDrawer();
     if (window.renderProjectTable) window.renderProjectTable();
     return false;
   };
 
-  // ===== Drawer System =====
   window.showDrawer = function(id) {
     const p = PT.byId(id);
     if (!p) return;
@@ -179,26 +172,25 @@
             ${p.project_no ? `<span class="code" style="margin-left:6px">${PT.esc(p.project_no)}</span>` : ""}
           </div>
         </div>
-        <button class="close" onclick="closeDrawer()">✕</button>
+        <button class="close" onclick="closeDrawer()">&times;</button>
       </div>
       <div class="drawer-body">
         <div class="tag-row" style="margin-bottom:14px">
           <span class="badge ${badgeClass}">${PT.statusLabel(status)} (${p.status_pct||0}%)</span>
           ${p.ma_customer ? `<span class="badge st-MA">MA Phase</span>` : ""}
         </div>
-
         <form class="frm" id="editForm" onsubmit="return false;">
           <div class="row">
-            <label>ชื่อลูกค้า</label>
-            <input type="text" name="customer" value="${PT.esc(p.customer)}" placeholder="เช่น GSB, KTC">
+            <label>Customer</label>
+            <input type="text" name="customer" value="${PT.esc(p.customer)}" placeholder="e.g. GSB, KTC">
           </div>
           <div class="row">
             <label>Project No</label>
-            <input type="text" name="project_no" value="${PT.esc(p.project_no)}" placeholder="เช่น BFS220100">
+            <input type="text" name="project_no" value="${PT.esc(p.project_no)}" placeholder="e.g. BFS220100">
           </div>
           <div class="row wide">
             <label>Project Name</label>
-            <textarea name="project_name" rows="2" placeholder="ชื่อโครงการ">${PT.esc(p.project_name)}</textarea>
+            <textarea name="project_name" rows="2" placeholder="Project name">${PT.esc(p.project_name)}</textarea>
           </div>
           <div class="row">
             <label>Start Date</label>
@@ -210,11 +202,11 @@
           </div>
           <div class="row">
             <label>Sale / PM</label>
-            <input type="text" name="sale_pm" value="${PT.esc(p.sale_pm)}" placeholder="เช่น P'Aey/Gap">
+            <input type="text" name="sale_pm" value="${PT.esc(p.sale_pm)}" placeholder="e.g. P'Aey/Gap">
           </div>
           <div class="row">
             <label>Engineer</label>
-            <input type="text" name="engineer" value="${PT.esc(p.engineer)}" placeholder="เช่น Game/Hok">
+            <input type="text" name="engineer" value="${PT.esc(p.engineer)}" placeholder="e.g. Game/Hok">
           </div>
           <div class="row">
             <label>Status %</label>
@@ -222,35 +214,32 @@
           </div>
           <div class="row wide">
             <label>MA (Customer)</label>
-            <textarea name="ma_customer" rows="2" placeholder="ข้อมูล MA ลูกค้า">${PT.esc(p.ma_customer)}</textarea>
+            <textarea name="ma_customer" rows="2" placeholder="MA customer details">${PT.esc(p.ma_customer)}</textarea>
           </div>
           <div class="row wide">
             <label>MA (Product)</label>
-            <textarea name="ma_product" rows="2" placeholder="ข้อมูล MA สินค้า">${PT.esc(p.ma_product)}</textarea>
+            <textarea name="ma_product" rows="2" placeholder="MA product details">${PT.esc(p.ma_product)}</textarea>
           </div>
           <div class="row wide">
-            <label>Action / ประวัติ</label>
-            <textarea name="action" rows="4" placeholder="บันทึกการดำเนินการ">${PT.esc(p.action)}</textarea>
+            <label>Action / History</label>
+            <textarea name="action" rows="4" placeholder="Action history">${PT.esc(p.action)}</textarea>
           </div>
           <div class="row wide">
             <label>Next Action</label>
-            <textarea name="next_action" rows="2" placeholder="แผนงานถัดไป">${PT.esc(p.next_action)}</textarea>
+            <textarea name="next_action" rows="2" placeholder="Next action plan">${PT.esc(p.next_action)}</textarea>
           </div>
           <div class="row wide">
-            <label>หมายเหตุ</label>
-            <textarea name="note" rows="2" placeholder="หมายเหตุเพิ่มเติม">${PT.esc(p.note)}</textarea>
+            <label>Note</label>
+            <textarea name="note" rows="2" placeholder="Additional notes">${PT.esc(p.note)}</textarea>
           </div>
         </form>
       </div>
       <div class="drawer-foot">
-        <button class="btn ghost" onclick="closeDrawer()">ยกเลิก</button>
+        <button class="btn ghost" onclick="closeDrawer()">Cancel</button>
         <button class="btn" style="background:#fee2e2;color:#b91c1c;border-color:#fca5a5;margin-right:auto" onclick="deleteProject(${p.id})">
-          🗑 ลบโครงการ
+          &#128465; Delete
         </button>
-        <button class="btn primary" onclick="saveProject(${p.id})">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          บันทึก
-        </button>
+        <button class="btn primary" onclick="saveProject(${p.id})">&#10003; Save</button>
       </div>
     `;
 
@@ -288,7 +277,7 @@
     p.note = formData.get("note") || "";
 
     PT.save();
-    PT.toast("บันทึกโครงการเรียบร้อยแล้ว");
+    PT.toast("Project saved successfully");
     closeDrawer();
     if (window.renderProjectTable) window.renderProjectTable();
     return false;
@@ -297,22 +286,21 @@
   window.deleteProject = function(id) {
     const p = PT.byId(id);
     if (!p) return;
-    if (!confirm(`ลบโครงการ "${p.project_name}" ใช่ไหม?`)) return;
+    if (!confirm(`Delete project "${p.project_name}"?`)) return;
     const idx = PT.state.projects.findIndex(x => x.id === id);
     if (idx >= 0) {
       PT.state.projects.splice(idx, 1);
       PT.save();
-      PT.toast("ลบโครงการแล้ว");
+      PT.toast("Project deleted");
       closeDrawer();
       if (window.renderProjectTable) window.renderProjectTable();
     }
   };
 
-  // ===== Export to Excel =====
   window.exportToExcel = function() {
     const projects = PT.projects();
     if (!projects.length) {
-      PT.toast("ไม่มีข้อมูลให้ส่งออก");
+      PT.toast("No data to export");
       return;
     }
 
@@ -333,8 +321,6 @@
     }));
 
     const ws = XLSX.utils.json_to_sheet(data);
-
-    // Set column widths
     ws["!cols"] = [
       { wch: 12 }, { wch: 14 }, { wch: 50 },
       { wch: 12 }, { wch: 12 }, { wch: 16 },
@@ -349,10 +335,9 @@
     const dateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,"0")}${String(now.getDate()).padStart(2,"0")}`;
     const fileName = `MFEC_Project_Tracker_${dateStr}.xlsx`;
     XLSX.writeFile(wb, fileName);
-    PT.toast(`ส่งออก Excel สำเร็จ: ${fileName}`);
+    PT.toast(`Excel exported: ${fileName}`);
   };
 
-  // Global data ready callback
   window.onDataReady = function() {
     switchView("dashboard");
   };
